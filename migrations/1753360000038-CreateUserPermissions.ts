@@ -6,7 +6,7 @@ export class CreateUserPermissions1753360000038 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     // Create permissions table first
     await queryRunner.query(`
-      CREATE TABLE permissions (
+      CREATE TABLE IF NOT EXISTS permissions (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         name VARCHAR(255) NOT NULL UNIQUE,
         description TEXT,
@@ -19,24 +19,24 @@ export class CreateUserPermissions1753360000038 implements MigrationInterface {
 
     // Create indexes for permissions table
     await queryRunner.query(`
-      CREATE INDEX idx_permissions_name ON permissions(name)
+      CREATE INDEX IF NOT EXISTS idx_permissions_name ON permissions(name)
     `);
 
     await queryRunner.query(`
-      CREATE INDEX idx_permissions_resource ON permissions(resource)
+      CREATE INDEX IF NOT EXISTS idx_permissions_resource ON permissions(resource)
     `);
 
     await queryRunner.query(`
-      CREATE INDEX idx_permissions_action ON permissions(action)
+      CREATE INDEX IF NOT EXISTS idx_permissions_action ON permissions(action)
     `);
 
     await queryRunner.query(`
-      CREATE INDEX idx_permissions_resource_action ON permissions(resource, action)
+      CREATE INDEX IF NOT EXISTS idx_permissions_resource_action ON permissions(resource, action)
     `);
 
     // Create role_permissions table (many-to-many relationship)
     await queryRunner.query(`
-      CREATE TABLE role_permissions (
+      CREATE TABLE IF NOT EXISTS role_permissions (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         role_id UUID NOT NULL,
         permission_id UUID NOT NULL,
@@ -49,21 +49,21 @@ export class CreateUserPermissions1753360000038 implements MigrationInterface {
 
     // Create indexes for role_permissions table
     await queryRunner.query(`
-      CREATE INDEX idx_role_permissions_role_id ON role_permissions(role_id)
+      CREATE INDEX IF NOT EXISTS idx_role_permissions_role_id ON role_permissions(role_id)
     `);
 
     await queryRunner.query(`
-      CREATE INDEX idx_role_permissions_permission_id ON role_permissions(permission_id)
+      CREATE INDEX IF NOT EXISTS idx_role_permissions_permission_id ON role_permissions(permission_id)
     `);
 
     // Create composite index for better query performance
     await queryRunner.query(`
-      CREATE INDEX idx_role_permissions_role_permission ON role_permissions(role_id, permission_id)
+      CREATE INDEX IF NOT EXISTS idx_role_permissions_role_permission ON role_permissions(role_id, permission_id)
     `);
 
     // Create user_permissions table (many-to-many relationship for direct user permissions)
     await queryRunner.query(`
-      CREATE TABLE user_permissions (
+      CREATE TABLE IF NOT EXISTS user_permissions (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         user_id UUID NOT NULL,
         permission_id UUID NOT NULL,
@@ -76,16 +76,16 @@ export class CreateUserPermissions1753360000038 implements MigrationInterface {
 
     // Create indexes for user_permissions table
     await queryRunner.query(`
-      CREATE INDEX idx_user_permissions_user_id ON user_permissions(user_id)
+      CREATE INDEX IF NOT EXISTS idx_user_permissions_user_id ON user_permissions(user_id)
     `);
 
     await queryRunner.query(`
-      CREATE INDEX idx_user_permissions_permission_id ON user_permissions(permission_id)
+      CREATE INDEX IF NOT EXISTS idx_user_permissions_permission_id ON user_permissions(permission_id)
     `);
 
     // Create composite index for better query performance
     await queryRunner.query(`
-      CREATE INDEX idx_user_permissions_user_permission ON user_permissions(user_id, permission_id)
+      CREATE INDEX IF NOT EXISTS idx_user_permissions_user_permission ON user_permissions(user_id, permission_id)
     `);
   }
 

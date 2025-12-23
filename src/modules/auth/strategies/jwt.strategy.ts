@@ -19,7 +19,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
   async validate(payload: any) {
     try {
-      // Use findById instead of findOneWithPermissions
       const user = await this.usersService.findById(payload.sub);
 
       if (!user) {
@@ -31,7 +30,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         email: user.email,
         fullName: user.fullName,
         role: user.role,
-        permissions: user.permissions || [],
       };
     } catch (error) {
       throw new UnauthorizedException('Invalid token');

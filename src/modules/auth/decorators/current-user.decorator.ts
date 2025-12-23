@@ -1,10 +1,8 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
-// Adjust these paths if your User or EmployeeProfile entities are located differently
 import { User } from '../../users/entities/user.entity';
-import { EmployeeProfile } from '../../hr/employees/entities/employee.entity';
 
 export const CurrentUser = createParamDecorator(
-  (data: unknown, ctx: ExecutionContext): User | EmployeeProfile => {
+  (data: unknown, ctx: ExecutionContext): User => {
     const request = ctx.switchToHttp().getRequest();
 
     if (!request.user) {
@@ -14,7 +12,7 @@ export const CurrentUser = createParamDecorator(
     }
 
     if (typeof data === 'string') {
-      return request.user[data as keyof (User | EmployeeProfile)];
+      return request.user[data as keyof User];
     }
 
     return request.user;

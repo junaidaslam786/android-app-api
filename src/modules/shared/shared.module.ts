@@ -1,24 +1,18 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { User } from '../users/entities/user.entity';
-import { Role } from '../roles/entities/role.entity';
-// import { Permission } from '../roles/entities/permission.entity';
-// import { RolePermission } from '../roles/entities/role-permission.entity';
-// import { UserPermission } from '../users/entities/user-permission.entity';
-import { PermissionsGuard } from '../../common/guards/permissions.guard';
-import { RolesGuard } from '../../common/guards/roles.guard';
+import { JwtModule } from '@nestjs/jwt';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([
-      User,
-      Role,
-      // Permission,
-      // RolePermission,
-      // UserPermission,
-    ]),
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        secret: config.get('JWT_SECRET'),
+        signOptions: { expiresIn: config.get('JWT_EXPIRES_IN', '7d') },
+      }),
+    }),
   ],
-  providers: [PermissionsGuard, RolesGuard],
-  exports: [TypeOrmModule, PermissionsGuard, RolesGuard],
+  exports: [JwtModule],
 })
 export class SharedModule {}

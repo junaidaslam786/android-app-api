@@ -6,6 +6,7 @@ export class CreateUsersAndRoles1689774123456 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`CREATE EXTENSION IF NOT EXISTS "pgcrypto";`);
 
+    // Create roles table first
     await queryRunner.query(`
       CREATE TABLE IF NOT EXISTS roles (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -19,6 +20,8 @@ export class CreateUsersAndRoles1689774123456 implements MigrationInterface {
     await queryRunner.query(`
       CREATE INDEX IF NOT EXISTS idx_roles_name ON roles(name);
     `);
+
+    // Create users table with proper role_id reference
     await queryRunner.query(`
       CREATE TABLE IF NOT EXISTS users (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -31,6 +34,7 @@ export class CreateUsersAndRoles1689774123456 implements MigrationInterface {
         CONSTRAINT fk_user_role FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE SET NULL
       );
     `);
+
     await queryRunner.query(`
       CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
     `);

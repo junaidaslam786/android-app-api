@@ -6,8 +6,6 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Role } from './entities/role.entity';
-import { Permission } from '../permissions/entities/permission.entity';
-import { RolePermission } from '../role-permissions/entities/role-permission.entity';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
 import { SecurityUtil } from '../../common/utils/security.util';
@@ -18,10 +16,6 @@ export class RolesService {
   constructor(
     @InjectRepository(Role)
     private roleRepository: Repository<Role>,
-    @InjectRepository(Permission)
-    private permissionRepository: Repository<Permission>,
-    @InjectRepository(RolePermission)
-    private rolePermissionRepository: Repository<RolePermission>,
   ) {}
 
   async create(dto: CreateRoleDto): Promise<ServiceResponse<Role>> {
@@ -52,22 +46,6 @@ export class RolesService {
     }
   }
 
-  async findOneWithPermissions(id: string): Promise<Role> {
-    const validId = SecurityUtil.validateId(id);
-
-    const role = await this.roleRepository
-      .createQueryBuilder('role')
-      .leftJoinAndSelect('role.permissions', 'permissions')
-      .where('role.id = :id', { id: validId })
-      .getOne();
-
-    if (!role) {
-      throw new NotFoundException('Role not found');
-    }
-
-    return role;
-  }
-
   async findAll(): Promise<ServiceResponse<Role[]>> {
     try {
       const roles = await this.roleRepository.find({
@@ -85,12 +63,27 @@ export class RolesService {
   }
 
   async findOne(id: string): Promise<ServiceResponse<Role>> {
-    const role = await this.findOneWithPermissions(id);
-    return {
-      success: true,
-      message: 'Role retrieved successfully',
-      data: role,
-    };
+    try {
+      const validId = SecurityUtil.validateId(id);
+      const role = await this.roleRepository.findOne({
+        where: { id: validId },
+      });
+
+      if (!role) {
+        throw new NotFoundException('Role not found');
+      }
+
+      return {
+        success: true,
+        message: 'Role retrieved successfully',
+        data: role,
+      };
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new Error(`Failed to find role: ${error.message}`);
+    }
   }
 
   async update(id: string, dto: UpdateRoleDto): Promise<ServiceResponse<Role>> {
@@ -116,7 +109,10 @@ export class RolesService {
 
       await this.roleRepository.update(validId, dto);
 
-      const updatedRole = await this.findOneWithPermissions(validId);
+      const updatedRole = await this.roleRepository.findOne({
+        where: { id: validId },
+      });
+
       return {
         success: true,
         message: 'Role updated successfully',

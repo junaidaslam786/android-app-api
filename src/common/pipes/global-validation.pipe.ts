@@ -21,9 +21,11 @@ export class GlobalValidationPipe extends ValidationPipe {
       // Override the exceptionFactory to return a cleaner response
       exceptionFactory: (errors: ValidationError[]) => {
         const messages = this.formatErrors(errors);
-
-        // This is the key change. We are now returning an array of specific error messages.
-        return new BadRequestException(messages);
+        return new BadRequestException({
+          message: 'Validation failed',
+          errors: messages,
+          statusCode: 400
+        });
       },
     });
   }
@@ -32,16 +34,29 @@ export class GlobalValidationPipe extends ValidationPipe {
   // that just extracts the top-level messages for the main response.
   private formatErrors(errors: ValidationError[]): string[] {
     const errorMessages: string[] = [];
-    errors.forEach((error) => {
-      if (error.constraints) {
-        Object.values(error.constraints).forEach((message) => {
-          errorMessages.push(message);
-        });
-      }
-      if (error.children && error.children.length > 0) {
-        errorMessages.push(...this.formatErrors(error.children));
-      }
-    });
+
+    const extractErrors = (
+      validationErrors: ValidationError[],
+      parentPath = '',
+    ) => {
+      validationErrors.forEach((error) => {
+        const propertyPath = parentPath
+          ? `${parentPath}.${error.property}`
+          : error.property;
+
+        if (error.constraints) {
+          Object.values(error.constraints).forEach((message) => {
+            errorMessages.push(`${propertyPath}: ${message}`);
+          });
+        }
+
+        if (error.children && error.children.length > 0) {
+          extractErrors(error.children, propertyPath);
+        }
+      });
+    };
+
+    extractErrors(errors);
     return errorMessages;
   }
 }

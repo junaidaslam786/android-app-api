@@ -3,33 +3,14 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { GlobalValidationPipe } from './common/pipes/global-validation.pipe';
-// import { SecurityConfig } from './config/security.config';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
-
-function getAllowedOrigins() {
-  // FRONTEND_URLS as comma-separated list
-  const list = (process.env.FRONTEND_URLS || '')
-    .split(',')
-    .map((s) => s.trim())
-    .filter(Boolean);
-
-  // Add your API/Swagger and frontend domains explicitly
-  // (adjust these to your real domains)
-  const extra = [
-    'https://adminapi.labverse.org', // API+Swagger origin
-    'http://localhost:3000', // Local dev
-    'https://labverse.org',
-    'https://www.labverse.org',
-  ];
-  for (const e of extra) if (!list.includes(e)) list.push(e);
-  return list;
-}
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   app.getHttpAdapter().getInstance().set('trust proxy', 1);
+
   // Security middleware
   app.use(
     helmet({
@@ -42,47 +23,43 @@ async function bootstrap() {
         },
       },
       crossOriginEmbedderPolicy: false,
-      crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
     }),
   );
 
-  // Rate limit (be gentle for Swagger)
+  // Rate limiting for API protection
   app.use(
     rateLimit({
-      windowMs: 60 * 1000,
-      limit: 300,
+      windowMs: 60 * 1000, // 1 minute
+      limit: 100, // 100 requests per minute
       standardHeaders: true,
       legacyHeaders: false,
     }),
   );
 
-  const allowed = getAllowedOrigins();
+  // CORS configuration for Android app and web clients
   app.enableCors({
-    origin: (origin, cb) => {
-      if (!origin) return cb(null, true);
-      if (allowed.includes(origin)) return cb(null, true);
-      return cb(new Error(`CORS blocked for origin: ${origin}`), false);
-    },
+    origin: true, // Allow all origins for Phase 1 development
     credentials: true,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-    allowedHeaders: 'Content-Type, Authorization',
+    allowedHeaders: 'Content-Type, Authorization, X-Requested-With',
     exposedHeaders: 'Authorization',
   });
 
-  // Global validation pipe with strict validation
+  // Global validation and error handling
   app.useGlobalPipes(new GlobalValidationPipe());
-  // Global exception filter
   app.useGlobalFilters(new HttpExceptionFilter());
 
-  // Swagger documentation with proper bearer auth configuration
+  // API Documentation
   const config = new DocumentBuilder()
-    .setTitle('LabVerse API')
-    .setDescription('Complete project management and CRM system API')
-    .setVersion('1.0')
+    .setTitle('LabVerse API - Phase 1')
+    .setDescription('Authentication and User Management API for Android App')
+    .setVersion('1.0.0')
     .addBearerAuth(
       { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
       'JWT-auth',
     )
+    .addTag('Auth', 'Authentication endpoints')
+    .addTag('Users', 'User management endpoints (Admin only)')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
@@ -92,9 +69,13 @@ async function bootstrap() {
     },
   });
 
-  const port = process.env.PORT || 3001;
-  await app.listen(port);
-  console.log(`Application is running on: http://localhost:${port}`);
-  console.log(`Swagger docs available at: http://localhost:${port}/api/docs`);
+  const port = process.env.PORT || 3002;
+  await app.listen(port, '0.0.0.0');
+
+  console.log('🚀 LabVerse API Phase 1 Started');
+  console.log(`📡 Server: http://localhost:${port}`);
+  console.log(`📚 API Docs: http://localhost:${port}/api/docs`);
+  console.log('✅ Ready for Android app integration');
 }
+
 bootstrap();

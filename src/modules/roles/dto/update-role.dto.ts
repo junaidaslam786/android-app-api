@@ -8,8 +8,8 @@ export class UpdateRoleDto {
     maxLength: 50,
   })
   @IsOptional()
-  @IsString()
-  @MaxLength(50)
+  @IsString({ message: 'Role name must be a string' })
+  @MaxLength(50, { message: 'Role name cannot exceed 50 characters' })
   name?: string;
 
   @ApiPropertyOptional({
@@ -18,7 +18,7 @@ export class UpdateRoleDto {
     maxLength: 255,
   })
   @IsOptional()
-  @IsString()
-  @MaxLength(255)
+  @IsString({ message: 'Description must be a string' })
+  @MaxLength(255, { message: 'Description cannot exceed 255 characters' })
   description?: string;
 }

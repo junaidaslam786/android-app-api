@@ -48,12 +48,20 @@ export class AuthService {
       throw new ConflictException('Email is already registered');
     }
 
+    // If no roleId provided, auto-assign 'user' role
+    let roleId = dto.roleId;
+    if (!roleId) {
+      const userRole = await this.usersService.findRoleByName('user');
+      if (userRole) {
+        roleId = userRole.id;
+      }
+    }
+
     const userResponse = await this.usersService.create({
       email: ValidationUtil.sanitizeString(dto.email.toLowerCase()),
       password: dto.password,
       fullName: ValidationUtil.sanitizeString(dto.fullName),
-
-      roleId: dto.roleId,
+      roleId: roleId,
     });
 
     SafeLogger.log(`User registered successfully: ${dto.email}`, 'AuthService');
@@ -93,6 +101,13 @@ export class AuthService {
     );
     if (!user) {
       throw new UnauthorizedException('Invalid email or password');
+    }
+
+    // Check if user account is active
+    if (!(user as any).isActive) {
+      throw new UnauthorizedException(
+        'Account is deactivated. Please contact administrator.',
+      );
     }
 
     const isMatch = await bcrypt.compare(dto.password, user.password);
@@ -278,6 +293,6 @@ export class AuthService {
   }
 
   async getUserWithDetails(userId: string) {
-    return this.usersService.findOneWithPermissions(userId);
+    return this.usersService.findById(userId);
   }
 }

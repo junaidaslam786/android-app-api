@@ -1,6 +1,9 @@
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import * as dotenv from 'dotenv';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
+import { User } from '../modules/users/entities/user.entity';
+import { Role } from '../modules/roles/entities/role.entity';
+import { RefreshToken } from '../modules/auth/entities/refresh-token.entity';
 
 dotenv.config();
 
@@ -10,14 +13,10 @@ const databaseConfig = (): TypeOrmModuleOptions => ({
   port: parseInt(process.env.DB_PORT || '5432', 10),
   username: process.env.DB_USERNAME || 'postgres',
   password: process.env.DB_PASSWORD || '',
-  database: process.env.DB_DATABASE || 'postgres',
-
-  entities: [__dirname + '/../modules/**/entities/*.entity.{ts,js}'],
-
+  database: process.env.DB_NAME || 'admin_panel',
+  entities: [User, Role, RefreshToken],
   migrations: [__dirname + '/../../migrations/*.{ts,js}'],
-
   synchronize: false,
-
   logging: process.env.TYPEORM_LOGGING === 'true',
   namingStrategy: new SnakeNamingStrategy(),
 });
