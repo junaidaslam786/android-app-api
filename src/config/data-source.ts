@@ -6,7 +6,7 @@ import { RefreshToken } from '../modules/auth/entities/refresh-token.entity';
 
 dotenv.config();
 
-export const AppDataSource = new DataSource({
+const AppDataSource = new DataSource({
   type: 'postgres',
   host: process.env.DB_HOST || 'postgres',
   port: parseInt(process.env.DB_PORT || '5432', 10),

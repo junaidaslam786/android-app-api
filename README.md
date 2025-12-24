@@ -181,20 +181,12 @@ Press `Ctrl+C` to exit log viewing.
 
 Migrations must be run after the containers are up to create database tables.
 
-### Step 1: Build the Application (if needed)
+### Run Migrations
 
-The migrations require compiled code:
-
-```bash
-docker-compose exec backend npm run build
-```
-
-### Step 2: Run Migrations
-
-Execute all pending migrations:
+Execute all pending migrations (automatically builds and runs inside Docker):
 
 ```bash
-docker-compose exec backend npm run migration:run
+npm run migration:run
 ```
 
 You should see output indicating successful migration:
@@ -205,20 +197,20 @@ Migration CreateUserPermissions1753360000038 has been executed successfully.
 Migration AddIsActiveToUsers1753400000000 has been executed successfully.
 ```
 
-### Step 3: Verify Migration Status
+### Verify Migration Status
 
 Check which migrations have been applied:
 
 ```bash
-docker-compose exec backend npm run migration:show
+npm run migration:show
 ```
 
-### Optional: Revert Migrations
+### Revert Migrations
 
 If you need to undo the last migration:
 
 ```bash
-docker-compose exec backend npm run migration:revert
+npm run migration:revert
 ```
 
 ## 🌱 Database Seeding
@@ -230,7 +222,7 @@ After running migrations, seed the database with initial data including default 
 Execute the Phase 1 seed file:
 
 ```bash
-docker-compose exec backend npm run seed:phase1
+npm run seed:phase1
 ```
 
 This will create:
@@ -271,25 +263,22 @@ Here's the complete sequence to start from scratch:
 
 ```bash
 # 1. Build Docker images
-docker-compose build
+npm run docker:build
 
 # 2. Start all services
-docker-compose up -d
+npm run docker:dev
 
 # 3. Wait for services to be ready (about 10-15 seconds)
 # Check logs to confirm backend is running
-docker-compose logs backend
+npm run docker:logs
 
-# 4. Build the application inside container
-docker-compose exec backend npm run build
+# 4. Run database migrations (automatically builds inside Docker)
+npm run migration:run
 
-# 5. Run database migrations
-docker-compose exec backend npm run migration:run
+# 5. Seed the database with initial data
+npm run seed:phase1
 
-# 6. Seed the database with initial data
-docker-compose exec backend npm run seed:phase1
-
-# 7. Verify application is running
+# 6. Verify application is running
 curl http://localhost:3000
 ```
 
@@ -299,30 +288,31 @@ If you've already completed the initial setup:
 
 ```bash
 # Start all services
-docker-compose up -d
+npm run docker:dev
 
 # View logs
-docker-compose logs -f backend
+npm run docker:logs
 ```
 
 ### Stop the Application
 
 ```bash
 # Stop all containers (preserves data)
-docker-compose down
+npm run docker:down
 
 # Stop and remove volumes (deletes all data)
-docker-compose down -v
+npm run docker:clean
 ```
 
 ### Restart Services
 
 ```bash
-# Restart all services
-docker-compose restart
+# Restart backend service
+npm run docker:restart
 
-# Restart only backend
-docker-compose restart backend
+# Or restart all services
+npm run docker:down
+npm run docker:dev
 ```
 
 ## 📚 API Documentation
@@ -363,14 +353,23 @@ npm run docker:dev
 # Stop all services
 npm run docker:down
 
-# View backend logs
+# View backend logs (follows logs in real-time)
 npm run docker:logs
 
-# Rebuild Docker images
+# Build Docker images
 npm run docker:build
+
+# Rebuild Docker images without cache
+npm run docker:rebuild
 
 # Remove all containers and volumes (clean slate)
 npm run docker:clean
+
+# Restart backend container
+npm run docker:restart
+
+# Check container status
+npm run docker:ps
 ```
 
 ### Development Scripts
@@ -398,7 +397,7 @@ npm run format
 ### Migration Scripts
 
 ```bash
-# Run all pending migrations
+# Run all pending migrations (builds automatically)
 npm run migration:run
 
 # Revert the last migration
@@ -416,9 +415,16 @@ npm run migration:generate -- <MigrationName>
 ```bash
 # Run Phase 1 seed (creates roles and default users)
 npm run seed:phase1
+```
 
-# Or run from Docker
-docker-compose exec backend npm run seed:phase1
+### Build Scripts
+
+```bash
+# Build inside Docker container
+npm run build:docker
+
+# Build locally
+npm run build
 ```
 
 ## 📁 Project Structure
@@ -528,7 +534,7 @@ PORT=3001
 
 ```bash
 # Check if PostgreSQL container is healthy
-docker-compose ps
+npm run docker:ps
 
 # View PostgreSQL logs
 docker-compose logs postgres
@@ -541,22 +547,21 @@ docker-compose restart postgres
 
 ```bash
 # Clean migrations table and start fresh
-docker-compose down -v
-docker-compose up -d
-docker-compose exec backend npm run build
-docker-compose exec backend npm run migration:run
+npm run docker:clean
+npm run docker:dev
+npm run migration:run
 ```
 
 ### Container Not Starting
 
 ```bash
 # View detailed logs
-docker-compose logs backend
+npm run docker:logs
 
 # Remove all containers and rebuild
-docker-compose down -v
-docker-compose build --no-cache
-docker-compose up -d
+npm run docker:clean
+npm run docker:rebuild
+npm run docker:dev
 ```
 
 ### Clean Start (Nuclear Option)
@@ -565,7 +570,7 @@ If everything is broken, start completely fresh:
 
 ```bash
 # Stop and remove everything
-docker-compose down -v
+npm run docker:clean
 
 # Remove all Docker images
 docker rmi $(docker images -q backend-backend)
@@ -575,12 +580,12 @@ rm -rf node_modules package-lock.json
 npm install
 
 # Rebuild and start
-docker-compose build --no-cache
-docker-compose up -d
+npm run docker:rebuild
+npm run docker:dev
 
-# Run migrations
-docker-compose exec backend npm run build
-docker-compose exec backend npm run migration:run
+# Run migrations and seed
+npm run migration:run
+npm run seed:phase1
 ```
 
 ### Remove Compiled .js Files
