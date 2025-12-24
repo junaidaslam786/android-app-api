@@ -76,7 +76,8 @@ export async function seedPhase1Data(dataSource: DataSource) {
 
 // Run seed if called directly
 if (require.main === module) {
-  import('../src/config/data-source').then(async ({ AppDataSource }) => {
+  import('../src/config/data-source').then(async (module) => {
+    const AppDataSource = module.default;
     try {
       await AppDataSource.initialize();
       await seedPhase1Data(AppDataSource);
