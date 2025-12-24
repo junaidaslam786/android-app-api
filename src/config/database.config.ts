@@ -15,7 +15,7 @@ const databaseConfig = (): TypeOrmModuleOptions => ({
   password: process.env.DB_PASSWORD || '',
   database: process.env.DB_NAME || 'admin_panel',
   entities: [User, Role, RefreshToken],
-  migrations: [__dirname + '/../../migrations/*.{ts,js}'],
+  migrations: [], // Migrations are run separately via CLI, not at runtime
   synchronize: false,
   logging: process.env.TYPEORM_LOGGING === 'true',
   namingStrategy: new SnakeNamingStrategy(),

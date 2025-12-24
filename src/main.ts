@@ -1,3 +1,5 @@
+import './polyfills';
+
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
@@ -5,6 +7,12 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { GlobalValidationPipe } from './common/pipes/global-validation.pipe';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
+import * as crypto from 'crypto';
+
+// Ensure crypto is available globally
+if (typeof global.crypto === 'undefined') {
+  (global as any).crypto = crypto;
+}
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);

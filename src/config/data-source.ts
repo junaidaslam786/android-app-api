@@ -8,13 +8,15 @@ dotenv.config();
 
 export const AppDataSource = new DataSource({
   type: 'postgres',
-  host: process.env.DB_HOST,
-  port: parseInt(process.env.DB_PORT!, 10),
-  username: process.env.DB_USERNAME,
-  password: undefined,
-  database: process.env.DB_NAME,
+  host: process.env.DB_HOST || 'postgres',
+  port: parseInt(process.env.DB_PORT || '5432', 10),
+  username: process.env.DB_USERNAME || 'postgres',
+  password: process.env.DB_PASSWORD || 'postgres123',
+  database: process.env.DB_NAME || 'admin_panel',
   entities: [User, Role, RefreshToken],
-  migrations: ['migrations/*.ts'],
+  migrations: [__dirname + '/../../migrations/*.js'],
   synchronize: false,
   logging: true,
 });
+
+export default AppDataSource;

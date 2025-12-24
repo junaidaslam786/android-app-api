@@ -1,6 +1,14 @@
+import './polyfills';
+
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import * as crypto from 'crypto';
+
+// Polyfill crypto for TypeORM
+if (typeof global.crypto === 'undefined') {
+  (global as any).crypto = crypto;
+}
 
 import { UsersModule } from './modules/users/users.module';
 import { RolesModule } from './modules/roles/roles.module';
